@@ -10,8 +10,8 @@ Function ConnectToDB(Server As String, Database As String) As Boolean
     Set Conn = New ADODB.Connection
     On Error Resume Next
     
-    Server = "GERCOR0603P\GESTAODB,1433"
-    Database = "ADM_INFO"
+    Server =""
+    Database = ""
     
     Conn.ConnectionString = "Provider=SQLOLEDB.1; Integrated Security=SSPI; Server=" & Server & "; Database=" & Database & ";"
     Conn.Open
