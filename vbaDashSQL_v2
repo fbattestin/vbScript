@@ -29,23 +29,51 @@ Function Query(SQL As String)
     Dim Field As ADODB.Field
  
     Dim Col As Long
-
+    Dim Col2 As Long
+    Dim Col3 As Long
+    Dim Col4 As Long
+    Dim strCell As String
+    
     Set recordSet = New ADODB.recordSet
     recordSet.Open SQL, Conn, adOpenStatic, adLockReadOnly, adCmdText
  
     If recordSet.State Then
         Col = 1
+
+        Do While Worksheets("DATABASE").Cells(1, Col).Value <> ""
+            Col = Col + 1
+        Loop
         For Each Field In recordSet.Fields
             'ADD COLUMNS
             Worksheets("DATABASE").Cells(1, Col) = Field.Name
             Col = Col + 1
         Next Field
         
-        Worksheets("DATABASE").Cells(2, 1).CopyFromRecordset recordSet
+        
+        Col2 = 1
+        Do While Worksheets("DATABASE").Cells(2, Col2).Value <> ""
+            Col2 = Col2 + 1
+        Loop
+        
+            Worksheets("DATABASE").Cells(2, Col2).CopyFromRecordset recordSet
         Set recordSet = Nothing
+
     End If
     
-    Call Run
+       
+End Function
+Function LoopQuery(countQuery As Long)
+
+    Dim SQL As String
+    Dim count As Long
+    
+    count = 1
+    Do While count <= countQuery
+        SQL = Worksheets("QUERY").Cells(count, "B").Value
+        'MsgBox (count)
+        Call Query(SQL)
+        count = count + 1
+    Loop
     
 End Function
 
@@ -53,23 +81,18 @@ Public Sub Run()
  
     Dim SQL As String
     Dim Connected As Boolean
-    Dim qtdExec As Long
-    Dim cntCol As Long
+    Dim countQuery As Long
+    Dim Col As Long
     
+    'Count Queries to execute.
+    countQuery = Worksheets("QUERY").Range("B:B").Cells.SpecialCells(xlCellTypeConstants).count
     Connected = ConnectToDB("SQL_SERVER", "DB_Name")
-    qtdExec = Worksheets("QUERY").Cells(1, "F").Value
-    cntCol = 1
 
-    If cntCol <= (qtdExec) Then
-        SQL = Worksheets("QUERY").Cells(cntCol, "B").Value
-        cntCol = cntCol + 1
         If Connected Then
-            Call Query(SQL)
+            'Call Query(SQL)
+             Call LoopQuery(countQuery)
         Else
             MsgBox "Huston we have a problem!"
         End If
-   
-    End If
     Conn.Close
 End Sub
-
