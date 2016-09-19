@@ -1,0 +1,256 @@
+' Before we can start you’ll need to add a reference to your VBA project:
+' Microsoft ActiveX Data Objects x.x Library
+
+Option Explicit
+Private Conn As ADODB.Connection
+
+Function ConnectToDB(Server As String, Database As String) As Boolean
+ 
+    Set Conn = New ADODB.Connection
+    On Error Resume Next
+    
+    Server = Worksheets("CONN").Cells(1, "B").Value
+    Database = Worksheets("CONN").Cells(2, "B").Value
+    
+    Conn.ConnectionString = "Provider=SQLOLEDB.1; Integrated Security=SSPI; Server=" & Server & "; Database=" & Database & ";"
+    Conn.Open
+    
+    If Conn.State = 0 Then
+        ConnectToDB = False
+    Else
+        ConnectToDB = True
+    End If
+ 
+End Function
+
+Function Query(SQL As String, IdxQuery As Long, isIncremental As Long)
+ 
+    Dim recordSet As ADODB.recordSet
+    Dim Field As ADODB.Field
+ 
+    Dim Col As Long
+    Dim Col2 As Long
+    Dim Col3 As Long
+    Dim Col4 As Long
+    Dim Cel As Long
+    Dim strCell As String
+    
+    Set recordSet = New ADODB.recordSet
+    recordSet.Open SQL, Conn, adOpenStatic, adLockReadOnly, adCmdText
+ 
+    If recordSet.State Then
+        
+        'Col = 1
+        'Do While Worksheets("DATABASE").Cells(1, Col).Value <> ""
+        '    Col = Col + 1
+        'Loop
+        
+        Col = PointofReturn(IdxQuery, 1)
+        
+        For Each Field In recordSet.Fields
+            'ADD COLUMNS
+            Worksheets("DATABASE").Cells(1, Col) = Field.Name
+            Col = Col + 1
+        Next Field
+        
+        
+        If Worksheets("QUERY").Cells(IdxQuery, "D").Value = "" Then
+            Worksheets("QUERY").Range("D:D").NumberFormat = "General"
+            Worksheets("QUERY").Cells(IdxQuery, "D").Value = Col - 1
+            'Call LastRowInOneColumnQuery(Col, IdxQuery)
+        End If
+        
+        Col2 = PointofReturn(IdxQuery, 1)
+    
+        If isIncremental = 1 Then
+            Cel = PointofReturn(IdxQuery, 0)
+        Else
+            Cel = 2
+        End If
+            MsgBox ("cel " & Cel & " idxquery " & IdxQuery & " - Col = " & Col2)
+            Worksheets("DATABASE").Cells(Cel, Col2).CopyFromRecordset recordSet
+            
+            MsgBox (IdxQuery & " - " & recordSet.RecordCount)
+            If recordSet.RecordCount < 0 Then
+                
+                Dim FisrtRow As Long
+                Dim NextRow As Long
+                
+                recordSet.MoveFirst
+                FisrtRow = recordSet.RecordCount
+                
+                    For Each Field In recordSet.Fields
+                        recordSet.MoveNext
+                        NextRow = recordSet.RecordCount
+                        MsgBox ("First> " & FisrtRow & " Next: " & NextRow)
+                        If FisrtRow < NextRow Then
+                            FisrtRow = NextRow
+                        End If
+                    Next Field
+            End If
+            'Worksheets("QUERY").Cells(IdxQuery, "D").Value = Col2
+            Call LastRowInOneColumnQuery(IdxQuery, recordSet.RecordCount)
+            Set recordSet = Nothing
+            
+    End If
+    
+       
+End Function
+Function LoopQuery(countQuery As Long)
+
+    Dim SQL As String
+    Dim count As Long
+    Dim isIncremental As Long
+    
+    count = 1
+    Do While count <= countQuery
+        SQL = Worksheets("QUERY").Cells(count, "B").Value
+        isIncremental = Worksheets("QUERY").Cells(count, "C").Value
+        'MsgBox (count)
+        Call Query(SQL, count, isIncremental)
+        count = count + 1
+    Loop
+    
+End Function
+
+Function LastRowInOneColumnQuery(IdxQuery As Long, recordSetCount As Long)
+
+'Find the last used row in a Column: column A in this example
+    Dim StrColRowsParam As String
+    Dim ColSearch As Long
+    
+    MsgBox ("colsearch")
+    ColSearch = Worksheets("QUERY").Cells(IdxQuery, "D").Value
+     
+If recordSetCount > 0 Then
+    If InStr(ColSearch, "|") = 0 Then
+       If ColSearch <> 0 Then
+            Worksheets("QUERY").Cells(IdxQuery, "D").Value = CStr(ColSearch) & "|" & CStr(recordSetCount)
+        Else
+            Worksheets("QUERY").Cells(IdxQuery, "D").Value = CStr(recordSetCount)
+        End If
+    Else
+        StrColRowsParam = CStr(Format(Worksheets("QUERY").Cells(IdxQuery, "D").Value, "General Number")) & "|" & recordSetCount
+        Worksheets("QUERY").Cells(IdxQuery, "D").Value = StrColRowsParam
+    End If
+Else
+    If InStr(ColSearch, "|") = 0 Then
+       If ColSearch <> 0 Then
+            Dim FirstRow As Long
+            Dim LastRow As Long
+            Dim FirstCol As Long
+            Dim FirstPosition As Integer
+            Dim LastPosition As Integer
+                            
+            FirstPosition = 1
+            LastPosition = InStr(StrLastColRowsParam, "|")
+            LastPosition = LastPosition - 1
+            
+            FirstCol = ColSearch - (ColSearch - 1)
+            'parei aqui, funcao para achar maior ultima linha.
+            With Worksheets("DATABASE")
+                FirstCol = .Cells(.Rows.count, ColSearch).End(xlUp).Row
+            End With
+    
+            Worksheets("QUERY").Cells(IdxQuery, "D").Value = CStr(ColSearch) & "|" & CStr(recordSetCount)
+        Else
+            Worksheets("QUERY").Cells(IdxQuery, "D").Value = CStr(recordSetCount)
+        End If
+
+
+
+End Function
+Function PointofReturn(IdxQuery As Long, ColOrCell As Long) As Long
+
+Dim StrColRowsParam As String
+Dim StrLastColRowsParam As String
+Dim Col2 As Long
+
+StrColRowsParam = Worksheets("QUERY").Cells(IdxQuery, "D").Value
+
+If IdxQuery = 1 Then
+    StrLastColRowsParam = Worksheets("QUERY").Cells(IdxQuery, "D").Value
+Else
+    StrLastColRowsParam = Worksheets("QUERY").Cells(IdxQuery - 1, "D").Value
+End If
+
+    If ColOrCell = 1 Then 'as a col number of query return
+     
+        If StrColRowsParam = "" Then
+                Col2 = 1
+                Do While Worksheets("DATABASE").Cells(2, Col2).Value <> ""
+                    Col2 = Col2 + 1
+                Loop
+                PointofReturn = Col2
+        Else
+                MsgBox (InStr(StrColRowsParam, "|"))
+                If InStr(StrColRowsParam, "|") = 0 Then
+                MsgBox (InStr(1, StrLastColRowsParam, "|"))
+                    If InStr(StrLastColRowsParam, "|") <> 0 Or IdxQuery = 1 Then
+                        If InStr(StrLastColRowsParam, "|") <> 0 Then
+                        
+                            Dim FirstPosition As Integer
+                            Dim LastPosition As Integer
+                            
+                            FirstPosition = 1
+                            LastPosition = InStr(StrLastColRowsParam, "|")
+                            LastPosition = LastPosition - 1
+                            MsgBox ("MID: " & Mid(StrLastColRowsParam, FirstPosition, LastPosition))
+                            
+                            Col2 = CInt(StrColRowsParam) - (CInt(Mid(StrLastColRowsParam, FirstPosition, LastPosition)) + 1)
+                        
+                        Else
+                            Col2 = CInt(StrColRowsParam) - (CInt(StrLastColRowsParam) - 1)
+                        End If
+                    End If
+                    
+                PointofReturn = Col2
+                MsgBox ("Col Number = " & CStr(Col2))
+                Else
+                    PointofReturn = Mid(StrColRowsParam, 0, InStr(StrColRowsParam, "|"))
+                End If
+                '- Mid(StrLastColRowsParam, 0, InStr(StrLastColRowsParam, "|"))
+                'MsgBox (Mid(StrColRowsParam, 0, InStr(StrColRowsParam, "|")))
+        End If
+        
+    Else 'as a cel number of query return
+         
+        'MsgBox ("nop pipe" & InStr(StrColRowsParam, "|", 1))
+         
+        If InStr(StrColRowsParam, "|") = 0 Then
+        PointofReturn = 2
+        Else
+        PointofReturn = Mid(StrColRowsParam, InStr(StrColRowsParam, "|"), 5)
+        'MsgBox ( PointofReturn)
+        End If
+        
+    End If
+
+
+End Function
+
+Public Sub Run()
+  
+    Dim SQL As String
+    Dim Connected As Boolean
+    Dim countQuery As Long
+    Dim Col As Long
+    
+    'Count Queries to execute.
+    countQuery = Worksheets("QUERY").Range("B:B").Cells.SpecialCells(xlCellTypeConstants).count
+    Connected = ConnectToDB("SQL_SERVER", "DB_Name")
+    
+    
+    If Worksheets("CONFIG").Cells(1, "B").Value = 1 Then
+        Sheets("DATABASE").UsedRange.ClearContents
+        Sheets("QUERY").Range("D:D").ClearContents
+    End If
+
+        If Connected Then
+            'Call Query(SQL)
+             Call LoopQuery(countQuery)
+        Else
+            MsgBox "Huston we have a problem!"
+        End If
+    Conn.Close
+End Sub
