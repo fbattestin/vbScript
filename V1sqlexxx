@@ -1,0 +1,132 @@
+' Before we can start you’ll need to add a reference to your VBA project:
+' Microsoft ActiveX Data Objects x.x Library
+
+Option Explicit
+Private Conn As ADODB.Connection
+
+Function ConnectToDB(Server As String, Database As String) As Boolean
+ 
+    Set Conn = New ADODB.Connection
+    On Error Resume Next
+    
+    Server = Worksheets("CONN").Cells(1, "B").Value
+    Database = Worksheets("CONN").Cells(2, "B").Value
+    
+    Conn.ConnectionString = "Provider=SQLOLEDB.1; Integrated Security=SSPI; Server=" & Server & "; Database=" & Database & ";"
+    Conn.Open
+    
+    If Conn.State = 0 Then
+        ConnectToDB = False
+    Else
+        ConnectToDB = True
+    End If
+ 
+End Function
+
+Function Query(idxQuery As Long, SQL As String, isIncremental As Long, Wks As String)
+ 
+    Dim recordSet As ADODB.recordSet
+    Dim Field As ADODB.Field
+    Dim LastRow As Long
+    Dim isCreated As Boolean
+    Dim Col As Long
+
+    Set recordSet = New ADODB.recordSet
+    recordSet.Open SQL, Conn, adOpenStatic, adLockReadOnly, adCmdText
+    
+    isCreated = sheetExists(Wks)
+        If isCreated = False Then
+            Call sheetCreate(idxQuery, Wks)
+        End If
+
+    If recordSet.State Then
+        Col = 1
+        For Each Field In recordSet.Fields
+            'ADD COLUMNS
+            Worksheets(Wks).Cells(1, Col) = Field.Name
+            Col = Col + 1
+        Next Field
+        
+        Col = LastRowSheet(isIncremental, Wks)
+        
+        Worksheets(Wks).Cells(Col, 1).CopyFromRecordset recordSet
+        Set recordSet = Nothing
+        
+    End If
+End Function
+Public Sub Run()
+  
+    Dim Connected As Boolean
+
+    Connected = ConnectToDB("SQL_SERVER", "DB_Name")
+    
+        If Connected Then
+            Call LoopQuery
+            Conn.Close
+        Else
+            MsgBox "Huston we have a problem!"
+        End If
+ 
+End Sub
+Function LoopQuery()
+
+Dim isIncremental As Long
+Dim countQuery As Long
+Dim SQL As String
+Dim Wks As String
+Dim idxQuery As Long
+
+        idxQuery = 1
+        countQuery = Worksheets("QUERY").Range("B:B").Cells.SpecialCells(xlCellTypeConstants).Count
+        
+        Do While idxQuery <= countQuery
+        
+            SQL = Worksheets("QUERY").Cells(idxQuery, "B").Value
+            isIncremental = Worksheets("QUERY").Cells(idxQuery, "C").Value
+            Wks = Worksheets("QUERY").Cells(idxQuery, "D").Value
+            
+            Call Query(idxQuery, SQL, isIncremental, Wks)
+            idxQuery = idxQuery + 1
+            
+        Loop
+End Function
+
+Function sheetExists(Wks As String) As Boolean
+
+Dim Sheet As Worksheet
+    sheetExists = False
+    For Each Sheet In ActiveWorkbook.Worksheets
+        If Wks = Sheet.Name Then
+            sheetExists = True
+            Exit Function
+        End If
+    Next Sheet
+End Function
+Function sheetCreate(idxQuery As Long, Wks As String)
+        'create sheet
+        Sheets.Add.Name = Wks
+    
+        'move
+        Worksheets(Wks).Move _
+            after:=Worksheets("QUERY")
+            
+        'color
+        Worksheets(Wks).Tab.ColorIndex = idxQuery + 1
+End Function
+
+Function LastRowSheet(isIncremental As Long, Wks As String) As Long
+
+ If isIncremental = 0 Then
+        LastRowSheet = 2
+        Exit Function
+ Else
+            With Worksheets(Wks)
+            LastRowSheet = .Cells(.Rows.Count, 1).End(xlUp).Row
+                If LastRowSheet = 1 Then
+                    LastRowSheet = LastRowSheet + 1
+                    Exit Function
+                End If
+            End With
+            LastRowSheet = LastRowSheet + 1
+ End If
+End Function
