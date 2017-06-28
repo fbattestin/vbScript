@@ -1,3 +1,5 @@
+--https://www.sqlskills.com/blogs/paul/using-diskpart-and-wmic-to-check-disk-partition-alignment/
+
 ComputerName = "."
 Set wmiServices  = GetObject ( _
     "winmgmts:{impersonationLevel=Impersonate}!//" & ComputerName)
