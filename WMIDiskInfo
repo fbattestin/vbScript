@@ -1,4 +1,11 @@
 --https://www.sqlskills.com/blogs/paul/using-diskpart-and-wmic-to-check-disk-partition-alignment/
+--https://serverfault.com/questions/234096/how-do-i-determine-proper-alignment-of-a-windows-servers-disk
+--https://technet.microsoft.com/en-us/library/dd758814(v=sql.100).aspx
+--Win32_DiskDrive.txt
+--win32_diskpartition.txt
+--Win32_LogicalDisk.txt
+--Win32_LogicalDiskToPartition.txt
+--Win32_Volume.txt
 
 ComputerName = "."
 Set wmiServices  = GetObject ( _
