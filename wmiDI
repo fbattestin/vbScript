@@ -1,0 +1,9 @@
+Set objWMIService = GetObject("winmgmts:\\.\Root\CIMV2")
+Set colDiskDrives = objWMIService.ExecQuery("SELECT * FROM Win32_DiskPartition")
+
+For Each objPartition in colDiskDrives
+    Set colLogicalDisks = objWMIService.ExecQuery ("ASSOCIATORS OF {Win32_DiskPartition.DeviceID=""" & objPartition.DeviceID & """} WHERE AssocClass = Win32_LogicalDiskToPartition")
+    For Each objLogicalDisk In colLogicalDisks        
+         WScript.Echo "\device\harddisk" & objPartition.DiskIndex & "\partition" & objPartition.Index & " " & objLogicalDisk.VolumeName
+    Next
+Next
