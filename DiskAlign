@@ -22,7 +22,7 @@ namespace AppCSharp
             var dskQuery = new SelectQuery("win32_diskpartition");
 
             //Define your scope(what system you want to connect to and WMI path).
-            var mgmtScope = new ManagementScope("\\\\FB\\root\\cimv2");
+            var mgmtScope = new ManagementScope("\\\\.\\root\\cimv2");
             //Connect to WMI.
             mgmtScope.Connect();
 
@@ -78,8 +78,11 @@ namespace AppCSharp
                 //user gave an illegal input. Handle it here.
                 Console.WriteLine("Wrong Data. Check with your storage vendor the correctly value!");
             }
-            
+            Console.WriteLine();
+            Console.Write("Press any key to escape.");
+            Console.ReadLine();
             Console.ResetColor();
         }
+
     }
 }
