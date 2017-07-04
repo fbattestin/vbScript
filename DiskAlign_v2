@@ -1,0 +1,112 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Management;
+
+
+namespace AppCSharp
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+
+            //Create a new C# Console Application in Visual Studio.
+            //Add “System.Management” to the project references.
+            //Add a “using System.Management;” statement to the top of the Program.cs file.
+            //Perform the remaining steps inside the Main method (or wherever you want it).
+            
+            //Define your query(what you want to return from WMI).
+            var dskQuery = new SelectQuery("win32_diskpartition");
+
+            //Define your scope(what system you want to connect to and WMI path).
+            var mgmtScope = new ManagementScope("\\\\.\\root\\cimv2");
+            //Connect to WMI.
+            mgmtScope.Connect();
+
+            //Define a searcher for the query.
+            var mgmtSrchr = new ManagementObjectSearcher(mgmtScope, dskQuery);
+
+
+            Console.ForegroundColor = ConsoleColor.Green;
+
+     
+            double StripeSize, outStartOffset;
+            Console.WriteLine("----------------------------------------------------------------------");
+            Console.WriteLine("██████╗ ██╗███████╗██╗  ██╗     █████╗ ██╗     ██╗ ██████╗ ███╗   ██╗");
+            Console.WriteLine("██╔══██╗██║██╔════╝██║ ██╔╝    ██╔══██╗██║     ██║██╔════╝ ████╗  ██║");
+            Console.WriteLine("██║  ██║██║███████╗█████╔╝     ███████║██║     ██║██║  ███╗██╔██╗ ██║");
+            Console.WriteLine("██║  ██║██║╚════██║██╔═██╗     ██╔══██║██║     ██║██║   ██║██║╚██╗██║");
+            Console.WriteLine("██████╔╝██║███████║██║  ██╗    ██║  ██║███████╗██║╚██████╔╝██║ ╚████║");
+            Console.WriteLine("╚═════╝ ╚═╝╚══════╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══ ");
+            Console.WriteLine("by:fb,2017");
+            Console.WriteLine("----------------------------------------------------------------------");
+            Console.Write("Input Stripe Size:");
+
+            if (double.TryParse(Console.ReadLine(), out StripeSize))
+            {
+            Console.WriteLine("----------------------------------------------------------------------");
+
+                //Call searcher’s Get method and loop through results.
+                foreach (var diskAlign in mgmtSrchr.Get())
+                {
+                var Name = diskAlign.GetPropertyValue("Name").ToString();
+                var blkSize = diskAlign.GetPropertyValue("BlockSize").ToString();
+                var StartOffset = diskAlign.GetPropertyValue("StartingOffset").ToString();
+                var BloNumberOfBlocks = diskAlign.GetPropertyValue("NumberOfBlocks").ToString();
+                var Size = diskAlign.GetPropertyValue("Size").ToString();
+
+                //int.TryParse(Size, out outSize);
+                //Console.Write("StripeSize: " + StripeSize.ToString()); 
+                double StOffSet;
+                bool tryParse = Double.TryParse(StartOffset, out StOffSet);
+
+                    
+                    outStartOffset =  StripeSize / StOffSet;
+
+                    string result = "OK";
+
+                    if (outStartOffset.ToString("0.#").Trim().Length > 1)
+                        result = "NOK";
+
+
+                    Console.WriteLine();
+                    Console.WriteLine("Drive...........: " + Name);
+                    Console.WriteLine("Block Size......: " + blkSize);
+                    Console.WriteLine("Start Offset....: " + StartOffset);
+                    Console.WriteLine("Size in bytes...: " + Size.ToString());
+                    Console.Write("Align Factor....: " + outStartOffset.ToString("0.#") + " ");
+
+
+                    if (outStartOffset.ToString("0.#").Trim().Length > 1)
+                    {
+                        result = "NOK";
+                        Console.ForegroundColor = ConsoleColor.Black;
+                        Console.BackgroundColor = ConsoleColor.Red;
+                        Console.WriteLine("[" + result + "]");
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Black;
+                        Console.BackgroundColor = ConsoleColor.Green;
+                        Console.WriteLine("[" + result + "]");
+                    }
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.BackgroundColor = ConsoleColor.Black;
+                }
+            }
+            else
+            {
+                //user gave an illegal input. Handle it here.
+                Console.WriteLine("Wrong Data. Check with your storage vendor the correctly value!");
+            }
+            Console.WriteLine();
+            Console.Write("Press any key to escape.");
+            Console.ReadLine();
+            Console.ResetColor();
+        }
+
+    }
+}
