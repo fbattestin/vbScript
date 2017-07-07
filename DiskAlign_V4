@@ -18,7 +18,7 @@ namespace DiskAlign2
             //Perform the remaining steps inside the Main method (or wherever you want it).
 
             //Define your query(what you want to return from WMI).
-            var dskQuery = new SelectQuery("select * from win32_volume where driveletter is not null");
+            var dskQuery = new SelectQuery("select * from win32_volume"); //where driveletter is not null");
 
             //Define your scope(what system you want to connect to and WMI path).
             var mgmtScope = new ManagementScope("\\\\.\\root\\cimv2");
@@ -33,16 +33,17 @@ namespace DiskAlign2
             float StripeSize;
 
             Console.WriteLine();
-            Console.WriteLine("by fb,2017 ----------------------------------------------------------");
-            Console.WriteLine("--------------------------------------------------------------------");
+           // Console.WriteLine("                                                           by fb,2017");
+            Console.WriteLine("---------------------------------------------------------------------");
             Console.WriteLine("██████╗ ██╗███████╗██╗  ██╗     █████╗ ██╗     ██╗ ██████╗ ███╗   ██╗");
             Console.WriteLine("██╔══██╗██║██╔════╝██║ ██╔╝    ██╔══██╗██║     ██║██╔════╝ ████╗  ██║");
             Console.WriteLine("██║  ██║██║███████╗█████╔╝     ███████║██║     ██║██║  ███╗██╔██╗ ██║");
             Console.WriteLine("██║  ██║██║╚════██║██╔═██╗     ██╔══██║██║     ██║██║   ██║██║╚██╗██║");
             Console.WriteLine("██████╔╝██║███████║██║  ██╗    ██║  ██║███████╗██║╚██████╔╝██║ ╚████║");
             Console.WriteLine("╚═════╝ ╚═╝╚══════╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══ ");
-            Console.WriteLine("╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗ ");
-            Console.WriteLine(" ╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝");
+            Console.WriteLine("                                                           by fb,2017");
+            // Console.WriteLine("╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗╔╗╔═╗╔╗ ");
+            //Console.WriteLine(" ╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝╚╝╚═╝╚╝");
             Console.WriteLine("---------------------------------------------------------------------");
             Console.Write("Input Stripe Size in Bytes:");
 
@@ -54,25 +55,47 @@ namespace DiskAlign2
                 foreach (var diskAlign in DSmgmtSrchr.Get())
                 {
                     string result = "OK";
+                    float floatBlockSize, floatAlignFactor, floatCapacity, floatFreeSpace, modTest;
+                    var Label = "";
+                    var BlockSize = "";
+                    var Capacity = "";
+                    var DriveLetter = "";
+                    var FreeSpace = "";
 
-                    var Label = diskAlign.GetPropertyValue("Label").ToString();
-                    var BlockSize = diskAlign.GetPropertyValue("BlockSize").ToString();
-                    var Capacity = diskAlign.GetPropertyValue("Capacity").ToString();
-                    var DriveLetter = diskAlign.GetPropertyValue("DriveLetter").ToString();
-                    var FreeSpace = diskAlign.GetPropertyValue("FreeSpace").ToString();
+                    try { DriveLetter = diskAlign.GetPropertyValue("DriveLetter").ToString(); }
+                    catch { DriveLetter = "Unassigned"; }
 
-                    float floatBlockSize, floatAlignFactor, floatCapacity, floatFreeSpace;
-                    float modTest;
+                    try { Label = diskAlign.GetPropertyValue("Label").ToString(); }
+                    catch { Label = "Unassigned"; }
+
+                    try { Capacity = diskAlign.GetPropertyValue("Capacity").ToString(); }
+                    catch { Capacity = "Missing"; }
+
+                    try { BlockSize = diskAlign.GetPropertyValue("BlockSize").ToString(); }
+                    catch { BlockSize = "Missing"; }
+                    
+                    try { FreeSpace = diskAlign.GetPropertyValue("FreeSpace").ToString(); }
+                    catch { FreeSpace = "Missing"; }
 
                     float.TryParse(BlockSize ,out floatBlockSize);
-                    float.TryParse(Capacity, out floatCapacity);
                     float.TryParse(FreeSpace, out floatFreeSpace);
+                    float.TryParse(Capacity, out floatCapacity);
 
-                    floatAlignFactor = StripeSize / floatBlockSize;
-                    modTest = StripeSize % floatBlockSize;
 
-                    floatCapacity = floatCapacity / 1024 / 1024;
-                    floatFreeSpace = floatFreeSpace / 1024 / 1024;
+                    if (Capacity == "Missing" || BlockSize == "Missing" || FreeSpace == "Missing")
+                    {
+                        floatAlignFactor = 0;
+                        modTest = 1;
+                        floatCapacity = 0;
+                    }
+                    else
+                    {
+                        floatAlignFactor = StripeSize / floatBlockSize;
+                        modTest = StripeSize % floatBlockSize;
+                        floatCapacity = floatCapacity / 1024 / 1024;                       
+                        floatFreeSpace = floatFreeSpace / 1024 / 1024;
+
+                    }
 
                     Console.WriteLine();
                     Console.WriteLine("Drive Letter..............: " + DriveLetter);
@@ -105,6 +128,7 @@ namespace DiskAlign2
                 //user gave an illegal input. Handle it here.
                 Console.WriteLine("Wrong Data. Check with your storage vendor the correctly value!");
             }
+
             Console.WriteLine();
             //Console.WriteLine("╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗╔╗");
             Console.Write("Press any key to escape.");
