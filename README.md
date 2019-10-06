@@ -1,4 +1,13 @@
 # vbScript
+<div style="text-align: left">
+<img src=https://user-images.githubusercontent.com/18652022/66270475-7de5e680-e82a-11e9-84b6-3a9c8eeb9aa5.gif" width="300" />
+</div>
+
+<div style="text-align: left">
+<img src=https://user-images.githubusercontent.com/18652022/66247301-8686d180-e6f1-11e9-84b6-c68f9d3d6e1b.png" width="300" />
+</div>
+
+
 
 https://sites.google.com/site/e90e50fx/home/matrix-bubble-chart-with-excel
 
@@ -8,10 +17,3 @@ https://trumpexcel.com/waffle-chart-excel/
 http://akioz.com/hadoop-architecture-diagram/hadoop-architecture-diagram-on-architecture-for-open-source-hadoop-powerpoint-template-15/
 
 
-<div style="text-align: left">
-<img src=https://user-images.githubusercontent.com/18652022/66270475-7de5e680-e82a-11e9-84b6-3a9c8eeb9aa5.gif" width="300" />
-</div>
-
-<div style="text-align: left">
-<img src=https://user-images.githubusercontent.com/18652022/66247301-8686d180-e6f1-11e9-84b6-c68f9d3d6e1b.png" width="300" />
-</div>
